@@ -8,6 +8,7 @@
 
 #include <boost/bind.hpp>
 #include <vesc_msgs/VescStateStamped.h>
+#include <vesc_msgs/VescImuStamped.h>
 
 namespace vesc_driver
 {
@@ -42,6 +43,7 @@ VescDriver::VescDriver(ros::NodeHandle nh,
 
   // create vesc state (telemetry) publisher
   state_pub_ = nh.advertise<vesc_msgs::VescStateStamped>("sensors/core", 10);
+  imu_pub_ = nh.advertise<vesc_msgs::VescImuStamped>("sensors/imu", 10);
 
   // since vesc state does not include the servo position, publish the commanded
   // servo position as a "sensor"
@@ -100,6 +102,7 @@ void VescDriver::timerCallback(const ros::TimerEvent& event)
   else if (driver_mode_ == MODE_OPERATING) {
     // poll for vesc state (telemetry)
     vesc_.requestState();
+    vesc_.requestImuData();
   }
   else {
     // unknown mode, how did that happen?
@@ -116,18 +119,29 @@ void VescDriver::vescPacketCallback(const boost::shared_ptr<VescPacket const>& p
     vesc_msgs::VescStateStamped::Ptr state_msg(new vesc_msgs::VescStateStamped);
     state_msg->header.stamp = ros::Time::now();
     state_msg->state.voltage_input = values->v_in();
-    state_msg->state.temperature_pcb = values->temp_pcb();
-    state_msg->state.current_motor = values->current_motor();
-    state_msg->state.current_input = values->current_in();
-    state_msg->state.speed = values->rpm();
-    state_msg->state.duty_cycle = values->duty_now();
+    
+    state_msg->state.current_motor = values->avg_motor_current();
+    state_msg->state.current_input = values->avg_input_current();
+    state_msg->state.avg_id        = values->avg_id();
+    state_msg->state.avg_iq        = values->avg_iq();
+    state_msg->state.duty_cycle    = values->duty_cycle_now();
+    state_msg->state.speed         = values->rpm();
+    
     state_msg->state.charge_drawn = values->amp_hours();
     state_msg->state.charge_regen = values->amp_hours_charged();
     state_msg->state.energy_drawn = values->watt_hours();
     state_msg->state.energy_regen = values->watt_hours_charged();
     state_msg->state.displacement = values->tachometer();
     state_msg->state.distance_traveled = values->tachometer_abs();
-    state_msg->state.fault_code = values->fault_code();
+    state_msg->state.fault_code   = values->fault_code();
+
+    state_msg->state.pid_pos_now    = values->pid_pos_now();
+    state_msg->state.controller_id  = values->controller_id();
+    state_msg->state.NTC_TEMP_MOS1  = values->temp_mos1();
+    state_msg->state.NTC_TEMP_MOS2  = values->temp_mos2();
+    state_msg->state.NTC_TEMP_MOS3  = values->temp_mos3();
+    state_msg->state.avg_vd         = values->avg_vd();
+    state_msg->state.avg_vq         = values->avg_vq();
 
     state_pub_.publish(state_msg);
   }
@@ -137,6 +151,37 @@ void VescDriver::vescPacketCallback(const boost::shared_ptr<VescPacket const>& p
     // todo: might need lock here
     fw_version_major_ = fw_version->fwMajor();
     fw_version_minor_ = fw_version->fwMinor();
+  } else if (packet->name() == "ImuData") {
+      boost::shared_ptr<VescPacketImu const> imuData =
+      boost::dynamic_pointer_cast<VescPacketImu const>(packet);
+
+      vesc_msgs::VescImuStamped::Ptr imu_msg(new vesc_msgs::VescImuStamped);
+      imu_msg->header.stamp = ros::Time::now();
+      //imu_msg->imu.mask     = imuData->mask();
+      imu_msg->imu.ypr.x    = imuData->roll();    
+      imu_msg->imu.ypr.y    = imuData->pitch();
+      imu_msg->imu.ypr.z    = imuData->yaw(); 
+
+      imu_msg->imu.linear_acceleration.x = imuData->acc_x();
+      imu_msg->imu.linear_acceleration.y = imuData->acc_y();
+      imu_msg->imu.linear_acceleration.z = imuData->acc_z();  
+
+
+      imu_msg->imu.angular_velocity.x = imuData->gyr_x();
+      imu_msg->imu.angular_velocity.y = imuData->gyr_y();
+      imu_msg->imu.angular_velocity.z = imuData->gyr_z();  
+
+
+      imu_msg->imu.compass.x = imuData->mag_x();
+      imu_msg->imu.compass.y = imuData->mag_y();
+      imu_msg->imu.compass.z = imuData->mag_z();    
+
+      imu_msg->imu.orientation.w = imuData->q_w();
+      imu_msg->imu.orientation.x = imuData->q_x();
+      imu_msg->imu.orientation.y = imuData->q_y();
+      imu_msg->imu.orientation.z = imuData->q_z(); 
+
+      imu_pub_.publish(imu_msg);
   }
 }
 

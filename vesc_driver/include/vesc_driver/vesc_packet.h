@@ -101,25 +101,30 @@ class VescPacketValues : public VescPacket
 public:
   VescPacketValues(boost::shared_ptr<VescFrame> raw);
 
-  double v_in() const;
-  double temp_mos1() const;
-  double temp_mos2() const;
-  double temp_mos3() const;
-  double temp_mos4() const;
-  double temp_mos5() const;
-  double temp_mos6() const;
-  double temp_pcb() const;
-  double current_motor() const;
-  double current_in() const;
-  double rpm() const;
-  double duty_now() const;
-  double amp_hours() const;
-  double amp_hours_charged() const;
-  double watt_hours() const;
-  double watt_hours_charged() const;
-  double tachometer() const;
-  double tachometer_abs() const;
-  int fault_code() const;
+
+double  temp_fet() const;
+double  temp_motor() const;
+double  avg_motor_current() const;
+double  avg_input_current() const;
+double  avg_id() const;
+double  avg_iq() const ;
+double  duty_cycle_now() const;
+double  rpm() const;
+double  v_in() const;
+double  amp_hours() const;
+double  amp_hours_charged() const;
+double  watt_hours() const;
+double  watt_hours_charged() const;
+int32_t tachometer() const;
+int32_t tachometer_abs() const;
+int     fault_code() const;
+double  pid_pos_now() const;
+int32_t controller_id() const;
+double  temp_mos1() const;
+double  temp_mos2() const;
+double  temp_mos3() const;
+double  avg_vd() const;
+double  avg_vq()  const;
 
 };
 
@@ -128,6 +133,74 @@ class VescPacketRequestValues : public VescPacket
 public:
   VescPacketRequestValues();
 };
+
+
+/*------------------------------------------------------------------------------------------------*/
+
+class VescPacketRequestImu : public VescPacket
+{
+public:
+  VescPacketRequestImu();
+
+  //  double duty() const;
+};
+
+class VescPacketImu : public VescPacket
+{
+public:
+  VescPacketImu(boost::shared_ptr<VescFrame> raw);
+
+  int    mask()  const;
+
+  double yaw()   const ;
+  double pitch() const ;
+  double roll()  const ;
+
+  double acc_x() const ;
+  double acc_y() const ;
+  double acc_z() const ;
+
+  double gyr_x() const ;
+  double gyr_y() const ;
+  double gyr_z() const ;
+
+  double mag_x() const ;
+  double mag_y() const ;
+  double mag_z() const ;
+
+  double q_w() const ;
+  double q_x() const ;
+  double q_y() const ;
+  double q_z() const ;
+
+
+  private:
+    double getFloat32Auto(uint32_t *pos) const;
+
+    
+    uint32_t mask_;
+    double roll_;
+    double pitch_;
+    double yaw_;
+
+    double acc_x_;
+    double acc_y_;
+    double acc_z_;
+
+    double gyr_x_;
+    double gyr_y_;
+    double gyr_z_;
+
+    double mag_x_;
+    double mag_y_;
+    double mag_z_;
+
+    double q0_;
+    double q1_;
+    double q2_;
+    double q3_;
+};
+
 
 /*------------------------------------------------------------------------------------------------*/
 
