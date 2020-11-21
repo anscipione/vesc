@@ -74,6 +74,21 @@ private:
 
 typedef boost::shared_ptr<VescPacket> VescPacketPtr;
 typedef boost::shared_ptr<VescPacket const> VescPacketConstPtr;
+/*------------------------------------------------------------------------------------------------*/
+class VescPacketCanForward : public VescPacket
+{
+public:
+  VescPacketCanForward(boost::shared_ptr<VescFrame> raw);
+
+  uint8_t vesc_id() const;
+  VescPacketConstPtr packet() const ;
+} ;
+
+class VescPacketCanForwardRequest : public VescPacket
+{
+public:
+  VescPacketCanForwardRequest(uint8_t vesc_id,const VescPacket &packet);
+} ;
 
 /*------------------------------------------------------------------------------------------------*/
 

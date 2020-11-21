@@ -1,5 +1,5 @@
 // -*- mode:c++; fill-column: 100; -*-
-
+#include <ros/ros.h>
 #include "vesc_driver/vesc_interface.h"
 
 #include <pthread.h>
@@ -117,10 +117,12 @@ void* VescInterface::Impl::rxThread(void)
 }
 
 
-VescInterface::VescInterface(const std::string& port,
+VescInterface::VescInterface(const int vesc_id,
+                             const std::string& port,
                              const PacketHandlerFunction& packet_handler,
                              const ErrorHandlerFunction& error_handler) :
-  impl_(new Impl())
+  impl_(new Impl()),
+  master_vesc_id_(vesc_id)
 {
   setPacketHandler(packet_handler);
   setErrorHandler(error_handler);
@@ -201,48 +203,56 @@ void VescInterface::send(const VescPacket& packet)
   }
 }
 
-void VescInterface::requestFWVersion()
+void VescInterface::requestFWVersion(int vesc_id)
 {
-  send(VescPacketRequestFWVersion());
+
+  if (master_vesc_id_==vesc_id || vesc_id==0){
+    ROS_INFO("MASTER");  
+     send(VescPacketRequestFWVersion());
+  }else{
+     ROS_INFO("FFW");  
+     send(VescPacketCanForwardRequest(vesc_id,VescPacketRequestFWVersion()));
+  }
 }
 
-void VescInterface::requestState()
+void VescInterface::requestState(int vesc_id)
 {
   send(VescPacketRequestValues());
 }
 
-void VescInterface::setDutyCycle(double duty_cycle)
+void VescInterface::setDutyCycle(int vesc_id,double duty_cycle)
 {
   send(VescPacketSetDuty(duty_cycle));
 }
 
-void VescInterface::setCurrent(double current)
+void VescInterface::setCurrent(int vesc_id,double current)
 {
   send(VescPacketSetCurrent(current));
 }
 
-void VescInterface::setBrake(double brake)
+void VescInterface::setBrake(int vesc_id,double brake)
 {
   send(VescPacketSetCurrentBrake(brake));
 }
 
-void VescInterface::setSpeed(double speed)
+void VescInterface::setSpeed(int vesc_id,double speed)
 {
   send(VescPacketSetRPM(speed));
 }
 
-void VescInterface::setPosition(double position)
+void VescInterface::setPosition(int vesc_id,double position)
 {
   send(VescPacketSetPos(position));
 }
 
-void VescInterface::setServo(double servo)
+void VescInterface::setServo(int vesc_id,double servo)
 {
   send(VescPacketSetServoPos(servo));
 }
 
-void VescInterface::requestImuData(){
+void VescInterface::requestImuData(int vesc_id){
   send(VescPacketRequestImu());
 }
+
 
 } // namespace vesc_driver

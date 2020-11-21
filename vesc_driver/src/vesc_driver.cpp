@@ -15,7 +15,8 @@ namespace vesc_driver
 
 VescDriver::VescDriver(ros::NodeHandle nh,
                        ros::NodeHandle private_nh) :
-  vesc_(std::string(),
+  vesc_(0,
+        std::string(),
         boost::bind(&VescDriver::vescPacketCallback, this, _1),
         boost::bind(&VescDriver::vescErrorCallback, this, _1)),
   duty_cycle_limit_(private_nh, "duty_cycle", -1.0, 1.0), current_limit_(private_nh, "current"),
@@ -92,7 +93,7 @@ void VescDriver::timerCallback(const ros::TimerEvent& event)
    */
   if (driver_mode_ == MODE_INITIALIZING) {
     // request version number, return packet will update the internal version numbers
-    vesc_.requestFWVersion();
+    vesc_.requestFWVersion(0);
     if (fw_version_major_ >= 0 && fw_version_minor_ >= 0) {
       ROS_INFO("Connected to VESC with firmware version %d.%d",
                fw_version_major_, fw_version_minor_);
@@ -101,8 +102,9 @@ void VescDriver::timerCallback(const ros::TimerEvent& event)
   }
   else if (driver_mode_ == MODE_OPERATING) {
     // poll for vesc state (telemetry)
-    vesc_.requestState();
-    vesc_.requestImuData();
+    vesc_.requestState(0);
+    vesc_.requestImuData(0);
+    vesc_.requestFWVersion(43);
   }
   else {
     // unknown mode, how did that happen?
@@ -182,7 +184,17 @@ void VescDriver::vescPacketCallback(const boost::shared_ptr<VescPacket const>& p
       imu_msg->imu.orientation.z = imuData->q_z(); 
 
       imu_pub_.publish(imu_msg);
+  } else if(packet->name() == "CanForward") {
+      boost::shared_ptr<VescPacketCanForward const> canData =
+      boost::dynamic_pointer_cast<VescPacketCanForward const>(packet);
+
+     uint8_t vid= canData->vesc_id();
+
+     ROS_INFO("%d command value ",
+                      vid);
   }
+
+  ROS_INFO("%s packet received",packet->name().c_str());
 }
 
 void VescDriver::vescErrorCallback(const std::string& error)
@@ -198,7 +210,7 @@ void VescDriver::vescErrorCallback(const std::string& error)
 void VescDriver::dutyCycleCallback(const std_msgs::Float64::ConstPtr& duty_cycle)
 {
   if (driver_mode_ = MODE_OPERATING) {
-    vesc_.setDutyCycle(duty_cycle_limit_.clip(duty_cycle->data));
+    vesc_.setDutyCycle(0,duty_cycle_limit_.clip(duty_cycle->data));
   }
 }
 
@@ -210,7 +222,7 @@ void VescDriver::dutyCycleCallback(const std_msgs::Float64::ConstPtr& duty_cycle
 void VescDriver::currentCallback(const std_msgs::Float64::ConstPtr& current)
 {
   if (driver_mode_ = MODE_OPERATING) {
-    vesc_.setCurrent(current_limit_.clip(current->data));
+    vesc_.setCurrent(0,current_limit_.clip(current->data));
   }
 }
 
@@ -222,7 +234,7 @@ void VescDriver::currentCallback(const std_msgs::Float64::ConstPtr& current)
 void VescDriver::brakeCallback(const std_msgs::Float64::ConstPtr& brake)
 {
   if (driver_mode_ = MODE_OPERATING) {
-    vesc_.setBrake(brake_limit_.clip(brake->data));
+    vesc_.setBrake(0,brake_limit_.clip(brake->data));
   }
 }
 
@@ -235,7 +247,7 @@ void VescDriver::brakeCallback(const std_msgs::Float64::ConstPtr& brake)
 void VescDriver::speedCallback(const std_msgs::Float64::ConstPtr& speed)
 {
   if (driver_mode_ = MODE_OPERATING) {
-    vesc_.setSpeed(speed_limit_.clip(speed->data));
+    vesc_.setSpeed(0,speed_limit_.clip(speed->data));
   }
 }
 
@@ -248,7 +260,7 @@ void VescDriver::positionCallback(const std_msgs::Float64::ConstPtr& position)
   if (driver_mode_ = MODE_OPERATING) {
     // ROS uses radians but VESC seems to use degrees. Convert to degrees.
     double position_deg = position_limit_.clip(position->data) * 180.0 / M_PI;
-    vesc_.setPosition(position_deg);
+    vesc_.setPosition(0,position_deg);
   }
 }
 
@@ -259,7 +271,7 @@ void VescDriver::servoCallback(const std_msgs::Float64::ConstPtr& servo)
 {
   if (driver_mode_ = MODE_OPERATING) {
     double servo_clipped(servo_limit_.clip(servo->data));
-    vesc_.setServo(servo_clipped);
+    vesc_.setServo(0,servo_clipped);
     // publish clipped servo value as a "sensor"
     std_msgs::Float64::Ptr servo_sensor_msg(new std_msgs::Float64);
     servo_sensor_msg->data = servo_clipped;

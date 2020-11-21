@@ -604,4 +604,35 @@ VescPacketRequestImu::VescPacketRequestImu() :
 }
 
 
+
+/*------------------------------------------------------------------------------------------------*/
+
+  VescPacketCanForward::VescPacketCanForward(boost::shared_ptr<VescFrame> raw):
+  VescPacket("CanForward", raw)
+  {
+
+  }
+
+  uint8_t VescPacketCanForward::vesc_id()  const {
+    return *(payload_.first+1);
+  }
+  VescPacketConstPtr VescPacketCanForward::packet() const {
+       int bytes_needed = VescFrame::VESC_MIN_FRAME_SIZE;
+       std::string error;
+       return VescPacketFactory::createPacket(frame().begin()+2,frame().end(), &bytes_needed,&error);
+  }
+
+ REGISTER_PACKET_TYPE(COMM_FORWARD_CAN, VescPacketCanForward)
+
+  VescPacketCanForwardRequest::VescPacketCanForwardRequest(uint8_t vesc_id,const VescPacket &packet):
+  VescPacket("CanForward",boost::distance(packet.frame())+2,COMM_FORWARD_CAN){
+      
+      *(payload_.first +1) = vesc_id;
+      for(int i=0;i<boost::distance(packet.frame());i++){
+        *(payload_.first +2+i) = *(packet.frame().begin() +i);
+      }
+  }
+
+
+
 } // namespace vesc_driver
