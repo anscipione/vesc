@@ -90,6 +90,13 @@ public:
   VescPacketCanForwardRequest(uint8_t vesc_id,const VescPacket &packet);
 } ;
 
+/*---------------------------------*/
+class VescPacketCANFrameForward : public VescPacket
+{
+public:
+  VescPacketCANFrameForward(boost::shared_ptr<VescFrame> raw);
+};
+
 /*------------------------------------------------------------------------------------------------*/
 
 class VescPacketFWVersion : public VescPacket
@@ -100,6 +107,18 @@ public:
   int fwMajor() const;
   int fwMinor() const;
 
+  std::string    hwname() const;
+  uint8_t* uuid()  const;
+  bool     paired() const;
+  uint8_t  devVersion() const;
+
+ private:
+  int minor_;
+  int major_;
+  std::string hwname_;
+  bool paired_;
+  uint8_t  uuid_[8];
+  uint8_t  devVersion_;
 };
 
 class VescPacketRequestFWVersion : public VescPacket
@@ -135,12 +154,15 @@ int32_t tachometer_abs() const;
 int     fault_code() const;
 double  pid_pos_now() const;
 int32_t controller_id() const;
+
 double  temp_mos1() const;
 double  temp_mos2() const;
 double  temp_mos3() const;
 double  avg_vd() const;
 double  avg_vq()  const;
 
+int32_t numVescs() const;
+double  watt_battery_left() const;
 };
 
 class VescPacketRequestValues : public VescPacket

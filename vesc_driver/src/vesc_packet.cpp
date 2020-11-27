@@ -73,16 +73,54 @@ VescPacket::VescPacket(const std::string& name, boost::shared_ptr<VescFrame> raw
 VescPacketFWVersion::VescPacketFWVersion(boost::shared_ptr<VescFrame> raw) :
   VescPacket("FWVersion", raw)
 {
+
+  major_ = *(payload_.first + 1);
+  minor_ = *(payload_.first + 2); 
+  int j=0;
+  
+
+  for(int i=0;*(payload_.first+3+i)!=0x00;i++){
+      j = i;
+      hwname_ +=  *(payload_.first+3+i);
+   }
+
+  j++;
+  
+  paired_ = *(payload_.first+2+j+1);
+  for(int u=0;u<8;u++){
+    uuid_[u]  = *(payload_.first+2+j+2+u);
+  }
+  
+  devVersion_ = *(payload_.first+2+j+2+8);
+
 }
 
 int VescPacketFWVersion::fwMajor() const
 {
-  return *(payload_.first + 1);
+  return major_;
 }
 
 int VescPacketFWVersion::fwMinor() const
 {
-  return *(payload_.first + 2);
+  return minor_;
+}
+
+std::string   VescPacketFWVersion::hwname() const
+{
+  
+   return hwname_.c_str();
+}
+uint8_t* VescPacketFWVersion::uuid()  const
+{
+  
+}
+bool     VescPacketFWVersion::paired() const
+{
+     return paired_;
+}
+uint8_t  VescPacketFWVersion::devVersion() const
+{
+    return devVersion_;
 }
 
 REGISTER_PACKET_TYPE(COMM_FW_VERSION, VescPacketFWVersion)
@@ -261,40 +299,42 @@ double VescPacketValues::pid_pos_now() const
 
 int32_t VescPacketValues::controller_id() const
 {
-  int32_t v = static_cast<int32_t>((static_cast<uint32_t>(*(payload_.first + 58)) << 24) +
-                                   (static_cast<uint32_t>(*(payload_.first + 59)) << 16) +
-                                   (static_cast<uint32_t>(*(payload_.first + 60)) << 8) +
-                                   static_cast<uint32_t>(*(payload_.first + 61)));
+  //int32_t v = static_cast<int32_t>((static_cast<uint32_t>(*(payload_.first + 58)) << 24) +
+  //                                 (static_cast<uint32_t>(*(payload_.first + 59)) << 16) +
+  //                                 (static_cast<uint32_t>(*(payload_.first + 60)) << 8) +
+  //                                 static_cast<uint32_t>(*(payload_.first + 61)));
+//
+    int32_t v = static_cast<int32_t>((static_cast<uint32_t>(*(payload_.first + 58) )));
+
   return static_cast<int32_t>(v);
 }
 
-
 double VescPacketValues::temp_mos1() const
 {
-  int16_t v = static_cast<int16_t>((static_cast<uint16_t>(*(payload_.first + 62)) << 8) +
-                                   static_cast<uint16_t>(*(payload_.first + 63)));
+  int16_t v = static_cast<int16_t>((static_cast<uint16_t>(*(payload_.first + 59)) << 8) +
+                                   static_cast<uint16_t>(*(payload_.first + 60)));
   return static_cast<double>(v) / 10.0;
 }
 
 double VescPacketValues::temp_mos2() const
 {
-  int16_t v = static_cast<int16_t>((static_cast<uint16_t>(*(payload_.first + 64)) << 8) +
-                                   static_cast<uint16_t>(*(payload_.first + 65)));
+  int16_t v = static_cast<int16_t>((static_cast<uint16_t>(*(payload_.first + 61)) << 8) +
+                                   static_cast<uint16_t>(*(payload_.first + 62)));
   return static_cast<double>(v) / 10.0;
 }
 
 double VescPacketValues::temp_mos3() const
 {
-  int16_t v = static_cast<int16_t>((static_cast<uint16_t>(*(payload_.first + 66)) << 8) +
-                                   static_cast<uint16_t>(*(payload_.first + 67)));
+  int16_t v = static_cast<int16_t>((static_cast<uint16_t>(*(payload_.first + 63)) << 8) +
+                                   static_cast<uint16_t>(*(payload_.first + 64)));
   return static_cast<double>(v) / 10.0;
 }
 
 double VescPacketValues::avg_vd()  const{
-     int32_t v = static_cast<int32_t>((static_cast<uint32_t>(*(payload_.first + 68)) << 24) +
-                                      (static_cast<uint32_t>(*(payload_.first + 69)) << 16) +
-                                      (static_cast<uint32_t>(*(payload_.first + 70)) << 8) +
-                                       static_cast<uint32_t>(*(payload_.first + 71))
+     int32_t v = static_cast<int32_t>((static_cast<uint32_t>(*(payload_.first + 65)) << 24) +
+                                      (static_cast<uint32_t>(*(payload_.first + 66)) << 16) +
+                                      (static_cast<uint32_t>(*(payload_.first + 67)) << 8) +
+                                       static_cast<uint32_t>(*(payload_.first + 68))
                                      );
   return static_cast<double>(v) / 1e3;
 
@@ -302,14 +342,15 @@ double VescPacketValues::avg_vd()  const{
 
 
 double VescPacketValues::avg_vq()  const{
-     int32_t v = static_cast<int32_t>((static_cast<uint32_t>(*(payload_.first + 72)) << 24) +
-                                      (static_cast<uint32_t>(*(payload_.first + 73)) << 16) +
-                                      (static_cast<uint32_t>(*(payload_.first + 74)) << 8) +
-                                       static_cast<uint32_t>(*(payload_.first + 75))
+     int32_t v = static_cast<int32_t>((static_cast<uint32_t>(*(payload_.first + 69)) << 24) +
+                                      (static_cast<uint32_t>(*(payload_.first + 70)) << 16) +
+                                      (static_cast<uint32_t>(*(payload_.first + 71)) << 8) +
+                                       static_cast<uint32_t>(*(payload_.first + 72))
                                      );
   return static_cast<double>(v) / 1e3;
 
 }
+
 
 REGISTER_PACKET_TYPE(COMM_GET_VALUES, VescPacketValues)
 
@@ -625,14 +666,29 @@ VescPacketRequestImu::VescPacketRequestImu() :
  REGISTER_PACKET_TYPE(COMM_FORWARD_CAN, VescPacketCanForward)
 
   VescPacketCanForwardRequest::VescPacketCanForwardRequest(uint8_t vesc_id,const VescPacket &packet):
-  VescPacket("CanForward",boost::distance(packet.frame())+2,COMM_FORWARD_CAN){
+  VescPacket("CanForwardRequest",boost::distance(packet.frame())-5+2,COMM_FORWARD_CAN){
       
       *(payload_.first +1) = vesc_id;
-      for(int i=0;i<boost::distance(packet.frame());i++){
-        *(payload_.first +2+i) = *(packet.frame().begin() +i);
-      }
+
+      /* take payload and copy to forward */
+      vesc_driver::Buffer a =packet.frame();
+      std::copy (a.begin()+2, a.end()-3, payload_.first +2);
+      /* calculate new crc */
+      VescFrame::CRC crc_calc;
+      crc_calc.process_bytes(&(*payload_.first), boost::distance(payload_));
+      uint16_t crc = crc_calc.checksum();
+      *(frame_->end() - 3) = static_cast<uint8_t>(crc >> 8);
+      *(frame_->end() - 2) = static_cast<uint8_t>(crc & 0xFF);
+
   }
 
+  VescPacketCANFrameForward::VescPacketCANFrameForward(boost::shared_ptr<VescFrame> raw):
+  VescPacket("CanFrameForward",raw)
+  {
+
+  }
+
+  REGISTER_PACKET_TYPE(COMM_CAN_FWD_FRAME, VescPacketCANFrameForward)
 
 
 } // namespace vesc_driver

@@ -207,17 +207,39 @@ void VescInterface::requestFWVersion(int vesc_id)
 {
 
   if (master_vesc_id_==vesc_id || vesc_id==0){
-    ROS_INFO("MASTER");  
-     send(VescPacketRequestFWVersion());
+    //ROS_INFO("MASTER"); 
+     VescPacketRequestFWVersion pay;
+/*
+     std::cout << "The vector elements are : "<< pay.frame().size() <<std::endl;
+     for(int i=0; i < pay.frame().size(); i++)
+         std::cout << std::showbase  << std::hex << std::setw(4) << static_cast<int>(pay.frame().at(i)) << " - ";
+     
+     std::cout <<std::endl <<"--------------------------------------"<<std::endl;
+*/
+
+     send(pay);
   }else{
-     ROS_INFO("FFW");  
-     send(VescPacketCanForwardRequest(vesc_id,VescPacketRequestFWVersion()));
+     //ROS_INFO("FFW");  
+     VescPacketCanForwardRequest  pay(vesc_id,VescPacketRequestFWVersion());
+/*
+     std::cout << "The vector elements are : "<< pay.frame().size() <<std::endl;
+     for(int i=0; i < pay.frame().size(); i++)
+         std::cout << std::showbase  << std::hex << std::setw(4) << static_cast<int>(pay.frame().at(i)) << " - ";
+     
+     std::cout <<std::endl <<"--------------------------------------"<<std::endl;
+*/
+     send(pay);
   }
 }
 
 void VescInterface::requestState(int vesc_id)
 {
-  send(VescPacketRequestValues());
+  if (master_vesc_id_==vesc_id || vesc_id==0){
+   send(VescPacketRequestValues());
+  } else {
+   VescPacketCanForwardRequest  pay(vesc_id,VescPacketRequestValues());
+    send(pay);
+  }  
 }
 
 void VescInterface::setDutyCycle(int vesc_id,double duty_cycle)
@@ -251,7 +273,14 @@ void VescInterface::setServo(int vesc_id,double servo)
 }
 
 void VescInterface::requestImuData(int vesc_id){
-  send(VescPacketRequestImu());
+
+  if (master_vesc_id_==vesc_id || vesc_id==0){
+   send(VescPacketRequestImu());
+  } else {
+   VescPacketCanForwardRequest  pay(vesc_id,VescPacketRequestImu());
+    send(pay);
+  }  
+  
 }
 
 

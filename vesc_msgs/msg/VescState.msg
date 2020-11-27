@@ -30,6 +30,8 @@ int32   fault_code
 
 float64 pid_pos_now
 int32 controller_id
+
+
 float64 NTC_TEMP_MOS1
 float64 NTC_TEMP_MOS2
 float64 NTC_TEMP_MOS3

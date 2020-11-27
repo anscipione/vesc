@@ -34,6 +34,8 @@ VescDriver::VescDriver(ros::NodeHandle nh,
 
   // attempt to connect to the serial port
   try {
+    //vesc_.requestFWVersion(0);
+    //vesc_.requestFWVersion(43);
     vesc_.connect(port);
   }
   catch (SerialException e) {
@@ -104,7 +106,11 @@ void VescDriver::timerCallback(const ros::TimerEvent& event)
     // poll for vesc state (telemetry)
     vesc_.requestState(0);
     vesc_.requestImuData(0);
-    vesc_.requestFWVersion(43);
+    vesc_.requestState(93);
+    //vesc_.requestImuData(93);
+    //vesc_.requestFWVersion(93); //hw 60_mk5
+
+    //master 60_mk4
   }
   else {
     // unknown mode, how did that happen?
@@ -139,6 +145,7 @@ void VescDriver::vescPacketCallback(const boost::shared_ptr<VescPacket const>& p
 
     state_msg->state.pid_pos_now    = values->pid_pos_now();
     state_msg->state.controller_id  = values->controller_id();
+
     state_msg->state.NTC_TEMP_MOS1  = values->temp_mos1();
     state_msg->state.NTC_TEMP_MOS2  = values->temp_mos2();
     state_msg->state.NTC_TEMP_MOS3  = values->temp_mos3();
@@ -153,6 +160,12 @@ void VescDriver::vescPacketCallback(const boost::shared_ptr<VescPacket const>& p
     // todo: might need lock here
     fw_version_major_ = fw_version->fwMajor();
     fw_version_minor_ = fw_version->fwMinor();
+
+    ROS_INFO("-=%s=- hardware paired %d",
+     fw_version->hwname().c_str(),
+     fw_version->paired()
+     );
+
   } else if (packet->name() == "ImuData") {
       boost::shared_ptr<VescPacketImu const> imuData =
       boost::dynamic_pointer_cast<VescPacketImu const>(packet);
