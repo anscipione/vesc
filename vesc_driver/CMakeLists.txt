@@ -36,6 +36,20 @@ target_link_libraries(vesc_driver_node
   ${catkin_LIBRARIES}
 )
 
+# node executable
+add_executable(vesc_device_namer 
+                                src/vesc_device_namer.cpp
+                                src/vesc_device_uuid_lookup.cpp
+                                src/vesc_driver.cpp
+                                src/vesc_interface.cpp
+                                src/vesc_packet.cpp
+                                src/vesc_packet_factory.cpp)
+add_dependencies(vesc_device_namer ${catkin_EXPORTED_TARGETS})
+target_link_libraries(vesc_device_namer
+  ${catkin_LIBRARIES}
+)
+
+
 # nodelet library
 add_library(vesc_driver_nodelet src/vesc_driver_nodelet.cpp
                                 src/vesc_driver.cpp
@@ -54,6 +68,11 @@ target_link_libraries(vesc_driver_nodelet
 install(TARGETS vesc_driver_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(TARGETS vesc_device_namer
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 
 install(TARGETS vesc_driver_nodelet
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

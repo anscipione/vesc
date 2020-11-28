@@ -1,5 +1,5 @@
 // -*- mode:c++; fill-column: 100; -*-
-#include <ros/ros.h>
+
 #include "vesc_driver/vesc_interface.h"
 
 #include <pthread.h>

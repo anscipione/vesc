@@ -108,7 +108,7 @@ public:
   int fwMinor() const;
 
   std::string    hwname() const;
-  uint8_t* uuid()  const;
+  const uint8_t* uuid()  const;
   bool     paired() const;
   uint8_t  devVersion() const;
 
@@ -117,7 +117,7 @@ public:
   int major_;
   std::string hwname_;
   bool paired_;
-  uint8_t  uuid_[8];
+  uint8_t  uuid_[12];
   uint8_t  devVersion_;
 };
 

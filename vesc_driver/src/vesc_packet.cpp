@@ -13,6 +13,8 @@
 #include "vesc_driver/datatypes.h"
 #include <cmath>
 
+
+
 namespace vesc_driver
 {
 
@@ -86,12 +88,17 @@ VescPacketFWVersion::VescPacketFWVersion(boost::shared_ptr<VescFrame> raw) :
 
   j++;
   
-  paired_ = *(payload_.first+2+j+1);
-  for(int u=0;u<8;u++){
-    uuid_[u]  = *(payload_.first+2+j+2+u);
-  }
   
-  devVersion_ = *(payload_.first+2+j+2+8);
+  
+ 
+  for(int u=0;u<12;u++){
+    uuid_[u]  = *(payload_.first+3+j+1+u);
+    
+  }
+ 
+
+  paired_ = *(payload_.first+3+j+1+12);
+  devVersion_ = *(payload_.first+3+j+2+12+1);
 
 }
 
@@ -110,9 +117,9 @@ std::string   VescPacketFWVersion::hwname() const
   
    return hwname_.c_str();
 }
-uint8_t* VescPacketFWVersion::uuid()  const
+const uint8_t* VescPacketFWVersion::uuid()  const
 {
-  
+  return uuid_;
 }
 bool     VescPacketFWVersion::paired() const
 {
