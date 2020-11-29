@@ -44,6 +44,7 @@ add_executable(vesc_device_namer
                                 src/vesc_interface.cpp
                                 src/vesc_packet.cpp
                                 src/vesc_packet_factory.cpp)
+
 add_dependencies(vesc_device_namer ${catkin_EXPORTED_TARGETS})
 target_link_libraries(vesc_device_namer
   ${catkin_LIBRARIES}
