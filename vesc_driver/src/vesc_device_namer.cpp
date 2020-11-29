@@ -21,7 +21,7 @@ int main(int argc, char** argv)
       VESC_UUID_ENV += lookup.deviceUUID(); 
       //std::cout << VESC_UUID_ENV <<std::endl;
       std::cout<<lookup.deviceUUID();
-      putenv( const_cast<char*>(VESC_UUID_ENV.c_str()) );
+      setenv("VESC_UUID_ENV",  lookup.deviceUUID(),0 );
       return 0;
    } else return -1;
 }

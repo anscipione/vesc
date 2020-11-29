@@ -21,7 +21,7 @@ VescDeviceLookup::VescDeviceLookup(std::string name)
   ready_(false),
   device_(name)
        {
-           std::cout<<"device port " << device_ << std::endl;
+           //std::cout<<"device port " << device_ << std::endl;
 
            try {
                 vesc_.connect(device_);
